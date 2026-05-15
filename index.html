@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Job Market">
+  <meta name="theme-color" content="#ffffff">
+  <title>Chemistry Job Market Simulator</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/1.119.0/iconfont/tabler-icons.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --bg2: #f5f5f4;
+      --bg3: #eeece8;
+      --text: #1a1a18;
+      --text2: #6b6b67;
+      --text3: #9b9b97;
+      --border: rgba(0,0,0,0.12);
+      --border2: rgba(0,0,0,0.2);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+      --blue-bg: #E6F1FB; --blue-border: #85B7EB; --blue-text: #0C447C; --blue-mid: #378ADD;
+      --green-bg: #EAF3DE; --green-border: #97C459; --green-text: #27500A; --green-mid: #639922;
+      --amber-bg: #FAEEDA; --amber-border: #EF9F27; --amber-text: #633806;
+      --coral-bg: #FAECE7; --coral-border: #D85A30; --coral-text: #712B13;
+      --purple-bg: #EEEDFE; --purple-border: #7F77DD; --purple-text: #3C3489;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a; --bg2: #252523; --bg3: #2e2e2b;
+        --text: #f0ede8; --text2: #a8a8a4; --text3: #6b6b67;
+        --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+        --blue-bg: #042C53; --blue-border: #185FA5; --blue-text: #B5D4F4;
+        --green-bg: #173404; --green-border: #3B6D11; --green-text: #C0DD97;
+        --amber-bg: #412402; --amber-border: #854F0B; --amber-text: #FAC775;
+        --coral-bg: #4A1B0C; --coral-border: #993C1D; --coral-text: #F5C4B3;
+        --purple-bg: #26215C; --purple-border: #534AB7; --purple-text: #CECBF6;
+      }
+    }
+
+    html, body {
+      height: 100%; font-family: var(--font); background: var(--bg);
+      color: var(--text); font-size: 16px; line-height: 1.5;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body { overflow-x: hidden; }
+
+    .app { max-width: 680px; margin: 0 auto; padding: 16px 16px 40px; }
+
+    /* Header */
+    .app-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 0 16px; border-bottom: 0.5px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .header-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--blue-bg); display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .header-title { font-size: 17px; font-weight: 600; color: var(--text); }
+    .header-sub { font-size: 12px; color: var(--text3); }
+
+    /* User bar */
+    .user-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--blue-bg); border: 0.5px solid var(--blue-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: var(--blue-text); flex-shrink: 0;
+    }
+    .user-name { font-size: 15px; font-weight: 500; }
+    .user-sub-text { font-size: 12px; color: var(--text3); }
+    .edit-link {
+      margin-left: auto; font-size: 12px; color: var(--text2);
+      background: none; border: none; font-family: var(--font);
+      text-decoration: underline; cursor: pointer; padding: 0;
+    }
+    .edit-row {
+      display: none; align-items: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .edit-row input { flex: 1; min-width: 140px; }
+
+    /* Divider */
+    .divider { border: none; border-top: 0.5px solid var(--border); margin: 18px 0; }
+
+    /* Section label */
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--text3);
+      letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px;
+    }
+
+    /* Toggle pills */
+    .toggle-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    .toggle-label { font-size: 13px; color: var(--text2); margin-right: 2px; }
+    .tog {
+      font-size: 13px; padding: 6px 13px; border-radius: 99px;
+      border: 1.5px solid var(--border2); cursor: pointer;
+      font-family: var(--font); background: var(--bg2); color: var(--text2);
+      transition: all 0.12s; -webkit-tap-highlight-color: transparent;
+    }
+    .tog:active { opacity: 0.75; }
+    .tog.a-r1   { background: var(--blue-bg);   border-color: var(--blue-mid);   color: var(--blue-text);   font-weight: 600; }
+    .tog.a-lac  { background: var(--coral-bg);  border-color: var(--coral-border); color: var(--coral-text); font-weight: 600; }
+    .tog.a-both { background: var(--green-bg);  border-color: var(--green-mid);  color: var(--green-text);  font-weight: 600; }
+    .tog.a-opt  { background: var(--green-bg);  border-color: var(--green-mid);  color: var(--green-text);  font-weight: 600; }
+    .tog.a-avg  { background: var(--blue-bg);   border-color: var(--blue-mid);   color: var(--blue-text);   font-weight: 600; }
+    .tog.a-pess { background: var(--coral-bg);  border-color: var(--coral-border); color: var(--coral-text); font-weight: 600; }
+
+    .scenario-hint { font-size: 11px; color: var(--text3); margin: -8px 0 14px; }
+
+    /* Params */
+    .params-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .rand-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+    .rand-card {
+      background: var(--bg2); border-radius: var(--radius);
+      border: 0.5px solid var(--border); padding: 10px 12px;
+    }
+    .rand-card-label { font-size: 11px; color: var(--text3); margin-bottom: 2px; }
+    .rand-card-val { font-size: 18px; font-weight: 600; }
+    .rand-badge {
+      display: inline-block; font-size: 10px; padding: 1px 6px;
+      border-radius: 99px; margin-top: 4px;
+      background: var(--amber-bg); color: var(--amber-text); border: 0.5px solid var(--amber-border);
+    }
+    .manual-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+    .ctrl { display: flex; flex-direction: column; gap: 5px; }
+    .ctrl-label { font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; }
+    .ctrl-label span:last-child { font-weight: 600; color: var(--text); }
+    input[type=range] {
+      width: 100%; accent-color: var(--blue-mid);
+      height: 4px; cursor: pointer;
+    }
+    .ctrl-sub { font-size: 10px; color: var(--text3); }
+
+    /* Stats */
+    .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 18px; }
+    .stat-card { background: var(--bg2); border-radius: var(--radius); padding: 10px 12px; }
+    .stat-card-label { font-size: 11px; color: var(--text3); margin-bottom: 3px; }
+    .stat-card-val { font-size: 20px; font-weight: 600; }
+    .stat-card-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+    /* School pills */
+    .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+    .pill {
+      font-size: 11px; padding: 3px 9px; border-radius: 99px;
+      border: 0.5px solid; white-space: nowrap;
+    }
+    .p-app  { background: var(--bg2); border-color: var(--border2); color: var(--text2); }
+    .p-site { background: var(--blue-bg); border-color: var(--blue-border); color: var(--blue-text); }
+    .p-off  { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); }
+
+    /* Offer cards */
+    .offer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); gap: 8px; margin-bottom: 14px; }
+    .offer-card {
+      background: var(--bg); border: 0.5px solid var(--border2);
+      border-radius: var(--radius-lg); padding: 12px 14px; cursor: pointer;
+      transition: border-color 0.12s; -webkit-tap-highlight-color: transparent;
+      active-opacity: 0.8;
+    }
+    .offer-card:active { opacity: 0.75; }
+    .offer-card.sel { border: 2px solid var(--green-mid); background: var(--green-bg); }
+    .offer-card.none-card { border-style: dashed; }
+    .offer-card.none-card.sel { border: 2px dashed var(--coral-border); background: var(--coral-bg); }
+    .offer-school { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .offer-meta { font-size: 11px; color: var(--text2); }
+    .offer-badge {
+      display: inline-block; font-size: 10px; padding: 2px 7px;
+      border-radius: 99px; margin-top: 5px;
+    }
+    .b-r1   { background: var(--blue-bg);   color: var(--blue-text); }
+    .b-lac  { background: var(--coral-bg);  color: var(--coral-text); }
+    .b-none { background: var(--coral-bg);  color: var(--coral-text); }
+    .b-other{ background: var(--bg2);       color: var(--text2); }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 20px; font-size: 14px; border-radius: var(--radius);
+      border: 0.5px solid var(--border2); background: var(--bg);
+      cursor: pointer; font-family: var(--font); color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { opacity: 0.75; }
+    .btn-green {
+      border: 1.5px solid var(--green-mid); background: var(--green-bg);
+      color: var(--green-text); font-weight: 600;
+    }
+    .btn-blue {
+      border: 1.5px solid var(--blue-mid); background: var(--blue-bg);
+      color: var(--blue-text); font-weight: 600;
+    }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 14px; }
+
+    /* Text inputs */
+    input[type=text] {
+      background: var(--bg2); border: 0.5px solid var(--border2);
+      border-radius: var(--radius); padding: 8px 12px;
+      font-family: var(--font); font-size: 14px; color: var(--text);
+      width: 100%;
+    }
+    input[type=text]:focus { outline: none; border-color: var(--blue-mid); }
+
+    /* Decision banner */
+    .decision-banner {
+      padding: 12px 16px; border-radius: var(--radius-lg);
+      border: 0.5px solid var(--border); background: var(--bg2);
+      margin-top: 12px; display: none;
+    }
+    .decision-banner.accepted { border-color: var(--green-border); background: var(--green-bg); }
+    .decision-banner.declined { border-color: var(--coral-border); background: var(--coral-bg); }
+    .decision-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .decision-sub { font-size: 12px; color: var(--text2); }
+
+    /* History */
+    .history-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 8px; }
+    .history-actions { display: flex; gap: 6px; align-items: center; }
+    .history-count { font-size: 12px; color: var(--text3); }
+    .history-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
+    th {
+      text-align: left; font-size: 10px; font-weight: 600; color: var(--text3);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 6px 8px; border-bottom: 0.5px solid var(--border);
+    }
+    td { padding: 6px 8px; border-bottom: 0.5px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: var(--bg2); }
+    .empty-note { font-size: 13px; color: var(--text3); padding: 8px 0; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+      .rand-grid, .manual-grid { grid-template-columns: 1fr; }
+      .offer-grid { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-icon">⚗️</div>
+    <div>
+      <div class="header-title">Chemistry Job Market</div>
+      <div class="header-sub">Faculty position simulator</div>
+    </div>
+  </div>
+
+  <!-- User -->
+  <div class="user-bar" id="user-bar">
+    <div class="user-avatar" id="user-avatar">C</div>
+    <div>
+      <div class="user-name" id="user-name-display">Cris's job market</div>
+      <div class="user-sub-text">Chemistry faculty simulator</div>
+    </div>
+    <button class="edit-link" onclick="showEdit()">Change name</button>
+  </div>
+  <div class="edit-row" id="edit-row">
+    <input type="text" id="name-input" placeholder="Your name" maxlength="32" style="max-width:200px;">
+    <button class="btn btn-green" style="padding:8px 14px;font-size:13px;" onclick="saveName()">Save</button>
+    <button class="btn" style="padding:8px 14px;font-size:13px;" onclick="cancelEdit()">Cancel</button>
+  </div>
+
+  <hr class="divider" style="margin-top:0;">
+
+  <!-- Institution type -->
+  <div class="section-label">Institution type</div>
+  <div class="toggle-row">
+    <button class="tog a-r1" id="tog-r1"   onclick="setMode('r1')">R1 only</button>
+    <button class="tog"      id="tog-lac"  onclick="setMode('lac')">LAC only</button>
+    <button class="tog"      id="tog-both" onclick="setMode('both')">R1 + LAC</button>
+    <button class="tog"      id="tog-all"  onclick="setMode('all')">All types</button>
+  </div>
+
+  <!-- Scenario -->
+  <div class="section-label">Scenario</div>
+  <div class="toggle-row">
+    <button class="tog"      id="tog-opt"  onclick="setScenario('optimistic')">🌟 Optimistic</button>
+    <button class="tog a-avg" id="tog-avg" onclick="setScenario('average')">📊 Average</button>
+    <button class="tog"      id="tog-pess" onclick="setScenario('pessimistic')">🌧 Pessimistic</button>
+  </div>
+  <div class="scenario-hint" id="scenario-hint">Onsite rate ~10–20% · Offer rate ~35–55% of onsites</div>
+
+  <!-- Parameters -->
+  <div class="params-header">
+    <span class="section-label" style="margin:0;">Parameters</span>
+    <button class="edit-link" id="override-btn" onclick="toggleOverride()">Set manually</button>
+  </div>
+
+  <div id="rand-display" class="rand-grid">
+    <div class="rand-card"><div class="rand-card-label">Applications</div><div class="rand-card-val" id="rand-applied">—</div><span class="rand-badge">randomized</span></div>
+    <div class="rand-card"><div class="rand-card-label">Onsite rate</div><div class="rand-card-val" id="rand-onsite">—</div><span class="rand-badge">randomized</span></div>
+    <div class="rand-card"><div class="rand-card-label">Offer rate</div><div class="rand-card-val" id="rand-offer">—</div><span class="rand-badge">randomized</span></div>
+  </div>
+
+  <div id="manual-display" style="display:none;" class="manual-grid">
+    <div class="ctrl">
+      <label class="ctrl-label"><span>Applications</span><span id="n-applied-val">40</span></label>
+      <input type="range" id="n-applied" min="5" max="120" value="40" step="1">
+      <span class="ctrl-sub">schools to apply to</span>
+    </div>
+    <div class="ctrl">
+      <label class="ctrl-label"><span>Onsite rate</span><span id="onsite-rate-val">15%</span></label>
+      <input type="range" id="onsite-rate" min="1" max="60" value="15" step="1">
+      <span class="ctrl-sub">of applications → onsite</span>
+    </div>
+    <div class="ctrl">
+      <label class="ctrl-label"><span>Offer rate</span><span id="offer-rate-val">45%</span></label>
+      <input type="range" id="offer-rate" min="5" max="90" value="45" step="1">
+      <span class="ctrl-sub">of onsites → offer</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-card-label">Applied</div><div class="stat-card-val" id="stat-applied">—</div><div class="stat-card-sub" id="stat-pool">—</div></div>
+    <div class="stat-card"><div class="stat-card-label">Onsites</div><div class="stat-card-val" id="stat-onsite">—</div><div class="stat-card-sub" id="stat-onsite-pct">—</div></div>
+    <div class="stat-card"><div class="stat-card-label">Offers</div><div class="stat-card-val" id="stat-offers">—</div><div class="stat-card-sub" id="stat-offers-pct">—</div></div>
+    <div class="stat-card"><div class="stat-card-label">Choice</div><div class="stat-card-val" id="stat-choice" style="font-size:12px;padding-top:3px;">—</div></div>
+  </div>
+
+  <!-- Run button -->
+  <div id="pre-run">
+    <button class="btn btn-green" style="width:100%;padding:12px;" onclick="runSim()">Run simulation</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section" style="display:none;">
+    <hr class="divider">
+    <div class="section-label">Applied to</div>
+    <div class="pill-row" id="list-applied"></div>
+
+    <div class="section-label">Onsites</div>
+    <div class="pill-row" id="list-onsite"></div>
+
+    <div class="section-label">Offers — choose one</div>
+    <div id="offers-container"></div>
+
+    <div class="decision-banner" id="decision-banner">
+      <div class="decision-title" id="decision-title"></div>
+      <div class="decision-sub" id="decision-sub"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-green" id="btn-confirm" disabled onclick="confirmChoice()">Confirm choice ↗</button>
+      <button class="btn" onclick="runSim()">Re-run</button>
+    </div>
+  </div>
+
+  <hr class="divider" style="margin-top:22px;">
+
+  <!-- History -->
+  <div class="history-header">
+    <span class="section-label" style="margin:0;">Simulation history</span>
+    <div class="history-actions">
+      <span class="history-count" id="history-count">0 runs</span>
+      <button class="btn btn-blue" id="btn-export" disabled onclick="exportXLSX()" style="padding:7px 12px;font-size:12px;">
+        <i class="ti ti-download" style="font-size:12px;vertical-align:-1px;margin-right:3px;"></i>Export
+      </button>
+      <button class="btn" onclick="clearHistory()" style="padding:7px 12px;font-size:12px;">Clear</button>
+    </div>
+  </div>
+  <div id="history-container">
+    <p class="empty-note">No simulations yet.</p>
+  </div>
+
+</div>
+
+<script>
+// ── School data ─────────────────────────────────────────────────────────────
+const R1 = ["Arizona State University","Auburn University","Baylor University","Boston College","Boston University","Brandeis University","Brigham Young University","Brown University","California Institute of Technology","Carnegie Mellon University","Case Western Reserve University","Clemson University","Colorado School of Mines","Colorado State University","Columbia University","Cornell University","Dartmouth College","Drexel University","Duke University","Emory University","Florida International University","Florida State University","George Washington University","Georgetown University","Georgia Institute of Technology","Harvard University","Howard University","Indiana University Bloomington","Iowa State University","Johns Hopkins University","Kansas State University","Kent State University","Lehigh University","Louisiana State University","MIT","Michigan State University","Michigan Technological University","Mississippi State University","Montana State University","New Mexico State University","New York University","NC State University","North Dakota State University","Northeastern University","Northwestern University","Ohio State University","Ohio University","Oklahoma State University","Oregon State University","Penn State University","Princeton University","Purdue University","Rensselaer Polytechnic Institute","Rice University","Rutgers University","Saint Louis University","Southern Illinois University","Southern Methodist University","Stanford University","Stony Brook University","Syracuse University","Temple University","Texas A&M University","Texas Tech University","Tufts University","Tulane University","University at Buffalo","University of Alabama","University of Alabama Birmingham","University of Arizona","University of Arkansas","UC Berkeley","UC Davis","UC Irvine","UCLA","UC Riverside","UC San Diego","UC Santa Barbara","UC Santa Cruz","University of Chicago","University of Cincinnati","University of Colorado Boulder","University of Connecticut","University of Delaware","University of Denver","University of Florida","University of Georgia","University of Hawaii at Manoa","University of Houston","University of Idaho","University of Illinois Chicago","University of Illinois Urbana-Champaign","University of Iowa","University of Kansas","University of Kentucky","University of Louisiana Lafayette","University of Louisville","University of Maine","University of Maryland College Park","UMass Amherst","University of Memphis","University of Miami","University of Michigan","University of Minnesota","University of Mississippi","University of Missouri","University of Nebraska Lincoln","University of Nevada Reno","University of New Mexico","UNC Chapel Hill","University of North Dakota","University of North Texas","University of Notre Dame","University of Oklahoma","University of Oregon","University of Pennsylvania","University of Pittsburgh","University of Rhode Island","University of Rochester","University of South Carolina","University of South Florida","University of Southern California","University of Southern Mississippi","University of Tennessee Knoxville","University of Toledo","University of Utah","University of Vermont","University of Virginia","University of Washington","University of Wisconsin-Madison","University of Wyoming","Utah State University","Vanderbilt University","Virginia Tech","Washington State University","Washington University in St. Louis","Wayne State University","West Virginia University","William & Mary","Worcester Polytechnic Institute","Yale University"].map(n=>({name:n,type:"R1"}));
+
+const LAC = ["Amherst College","Williams College","Carleton College","Harvey Mudd College","Haverford College","Reed College","Grinnell College","Oberlin College","Bowdoin College","Colby College","Middlebury College","Swarthmore College","Colgate University","Macalester College","Colorado College","Kenyon College","Denison University","Lawrence University","College of Wooster","St. Olaf College","Davidson College","Hamilton College","Bates College","Trinity College","Union College","Wesleyan University","Vassar College","Smith College","Mount Holyoke College","Wellesley College","Barnard College","Bryn Mawr College","Connecticut College","Dickinson College","Franklin & Marshall College","Gettysburg College","Kalamazoo College","Knox College","Lafayette College","Muhlenberg College","Occidental College","Rhodes College","Skidmore College","St. Lawrence University","Whitman College","Wittenberg University"].map(n=>({name:n,type:"LAC"}));
+
+const OTHER = ["Seton Hall University","Santa Clara University","Gonzaga University","Fordham University","Villanova University","Marquette University","Duquesne University","Creighton University"].map(n=>({name:n,type:"other"}));
+
+const SCENARIOS = {
+  optimistic:  {label:"Onsite ~20–35% · Offer ~50–70% of onsites",appliedMin:25,appliedMax:80,onsiteMin:20,onsiteMax:35,offerMin:50,offerMax:70},
+  average:     {label:"Onsite ~10–20% · Offer ~35–55% of onsites",appliedMin:20,appliedMax:70,onsiteMin:10,onsiteMax:20,offerMin:35,offerMax:55},
+  pessimistic: {label:"Onsite ~3–10% · Offer ~20–40% of onsites", appliedMin:20,appliedMax:60,onsiteMin:3, onsiteMax:10,offerMin:20,offerMax:40}
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'chem_sim_history';
+const NAME_KEY    = 'chem_sim_user';
+
+let userName    = localStorage.getItem(NAME_KEY) || 'Cris';
+let instMode    = 'r1';
+let scenario    = 'average';
+let isManual    = false;
+let selectedOffer = null;
+let currentSim  = null;
+let randParams  = {applied:null,onsite:null,offer:null};
+let simHistory  = [];
+
+// load history
+try { simHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch(e){}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function initials(n){ return n.trim().split(/\s+/).map(w=>w[0].toUpperCase()).slice(0,2).join(''); }
+function possessive(n){ const t=n.trim(); return t.endsWith('s')?t+"'":t+"'s"; }
+function randInt(a,b){ return Math.round(a+Math.random()*(b-a)); }
+function sample(arr,n){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a.slice(0,Math.min(n,a.length));
+}
+function saveToStorage(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(simHistory));
+  localStorage.setItem(NAME_KEY, userName);
+}
+
+// ── User ─────────────────────────────────────────────────────────────────────
+function updateUserUI(){
+  document.getElementById('user-avatar').textContent = initials(userName)||'?';
+  document.getElementById('user-name-display').textContent = possessive(userName)+' job market';
+}
+function showEdit(){
+  document.getElementById('user-bar').style.display='none';
+  document.getElementById('edit-row').style.display='flex';
+  const i=document.getElementById('name-input');
+  i.value=userName; i.focus(); i.select();
+}
+function saveName(){
+  const v=document.getElementById('name-input').value.trim();
+  if(v){ userName=v; saveToStorage(); }
+  updateUserUI();
+  document.getElementById('edit-row').style.display='none';
+  document.getElementById('user-bar').style.display='flex';
+}
+function cancelEdit(){
+  document.getElementById('edit-row').style.display='none';
+  document.getElementById('user-bar').style.display='flex';
+}
+document.getElementById('name-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter') saveName();
+  if(e.key==='Escape') cancelEdit();
+});
+
+// ── Scenario / mode ──────────────────────────────────────────────────────────
+function setScenario(s){
+  scenario=s;
+  const map={optimistic:'a-opt',average:'a-avg',pessimistic:'a-pess'};
+  ['opt','avg','pess'].forEach(k=>{
+    const f={opt:'optimistic',avg:'average',pess:'pessimistic'}[k];
+    document.getElementById('tog-'+k).className='tog'+(f===s?' '+map[f]:'');
+  });
+  document.getElementById('scenario-hint').textContent=SCENARIOS[s].label;
+  if(!isManual) freshRandom();
+}
+function setMode(m){
+  instMode=m;
+  const map={r1:'a-r1',lac:'a-lac',both:'a-both',all:'a-both'};
+  ['r1','lac','both','all'].forEach(k=>{
+    document.getElementById('tog-'+k).className='tog'+(k===m?' '+map[k]:'');
+  });
+}
+function getPool(){
+  if(instMode==='r1')  return R1;
+  if(instMode==='lac') return LAC;
+  if(instMode==='both') return [...R1,...LAC];
+  return [...R1,...LAC,...OTHER];
+}
+
+// ── Params ───────────────────────────────────────────────────────────────────
+function freshRandom(){
+  const s=SCENARIOS[scenario];
+  randParams={applied:randInt(s.appliedMin,s.appliedMax),onsite:randInt(s.onsiteMin,s.onsiteMax),offer:randInt(s.offerMin,s.offerMax)};
+  document.getElementById('rand-applied').textContent=randParams.applied;
+  document.getElementById('rand-onsite').textContent=randParams.onsite+'%';
+  document.getElementById('rand-offer').textContent=randParams.offer+'%';
+}
+function toggleOverride(){
+  isManual=!isManual;
+  document.getElementById('rand-display').style.display=isManual?'none':'grid';
+  document.getElementById('manual-display').style.display=isManual?'grid':'none';
+  document.getElementById('override-btn').textContent=isManual?'Use scenario values':'Set manually';
+  if(isManual){
+    document.getElementById('n-applied').value=randParams.applied||40;
+    document.getElementById('n-applied-val').textContent=document.getElementById('n-applied').value;
+    document.getElementById('onsite-rate').value=randParams.onsite||15;
+    document.getElementById('onsite-rate-val').textContent=document.getElementById('onsite-rate').value+'%';
+    document.getElementById('offer-rate').value=randParams.offer||45;
+    document.getElementById('offer-rate-val').textContent=document.getElementById('offer-rate').value+'%';
+  } else { freshRandom(); }
+}
+document.getElementById('n-applied').addEventListener('input',function(){document.getElementById('n-applied-val').textContent=this.value;});
+document.getElementById('onsite-rate').addEventListener('input',function(){document.getElementById('onsite-rate-val').textContent=this.value+'%';});
+document.getElementById('offer-rate').addEventListener('input',function(){document.getElementById('offer-rate-val').textContent=this.value+'%';});
+
+// ── Simulation ───────────────────────────────────────────────────────────────
+function runSim(){
+  if(!isManual) freshRandom();
+  selectedOffer=null; currentSim=null;
+  document.getElementById('decision-banner').style.display='none';
+  document.getElementById('btn-confirm').disabled=true;
+  document.getElementById('stat-choice').textContent='—';
+
+  const pool=getPool();
+  const nApp  = isManual?parseInt(document.getElementById('n-applied').value):randParams.applied;
+  const oRate = (isManual?parseInt(document.getElementById('onsite-rate').value):randParams.onsite)/100;
+  const fRate = (isManual?parseInt(document.getElementById('offer-rate').value):randParams.offer)/100;
+
+  const applied=sample(pool,nApp);
+  const onsite=sample(applied,Math.max(0,Math.round(applied.length*oRate)));
+  const offers=sample(onsite,Math.max(0,Math.round(onsite.length*fRate)));
+
+  currentSim={
+    runNumber: simHistory.length+1,
+    timestamp: new Date().toLocaleString(),
+    user: userName, scenario, instMode,
+    poolSize: pool.length,
+    nApplied: applied.length,
+    onsiteRatePct: Math.round(oRate*100),
+    offerRatePct: Math.round(fRate*100),
+    nOnsites: onsite.length,
+    nOffers: offers.length,
+    applied: applied.map(s=>s.name),
+    onsites: onsite.map(s=>s.name),
+    offerSchools: offers.map(s=>({name:s.name,type:s.type})),
+    choice: null
+  };
+
+  // Stats
+  document.getElementById('stat-applied').textContent=applied.length;
+  document.getElementById('stat-pool').textContent='of '+pool.length;
+  document.getElementById('stat-onsite').textContent=onsite.length;
+  document.getElementById('stat-onsite-pct').textContent=applied.length?Math.round(onsite.length/applied.length*100)+'% of apps':'—';
+  document.getElementById('stat-offers').textContent=offers.length;
+  document.getElementById('stat-offers-pct').textContent=onsite.length?Math.round(offers.length/onsite.length*100)+'% of onsites':'—';
+
+  // Pills
+  const onsiteSet=new Set(onsite.map(s=>s.name));
+  const offerSet=new Set(offers.map(s=>s.name));
+  document.getElementById('list-applied').innerHTML=applied.map(s=>
+    `<span class="pill ${onsiteSet.has(s.name)?'p-site':'p-app'}">${s.name}</span>`
+  ).join('');
+  document.getElementById('list-onsite').innerHTML=onsite.length
+    ?onsite.map(s=>`<span class="pill ${offerSet.has(s.name)?'p-off':'p-site'}">${s.name}</span>`).join('')
+    :'<span style="font-size:12px;color:var(--text3)">No onsites this cycle.</span>';
+
+  // Offer cards
+  let html='';
+  if(offers.length){
+    html='<div class="offer-grid">';
+    offers.forEach(s=>{
+      const badge=s.type==='R1'?'b-r1':s.type==='LAC'?'b-lac':'b-other';
+      const meta=s.type==='R1'?'Research university':s.type==='LAC'?'Liberal arts':'Teaching-focused';
+      html+=`<div class="offer-card" id="card-${s.name.replace(/[^a-zA-Z0-9]/g,'_')}" onclick="pickOffer('${s.name.replace(/'/g,"\\'")}','${s.type}')">
+        <div class="offer-school">${s.name}</div>
+        <div class="offer-meta">${meta}</div>
+        <span class="offer-badge ${badge}">${s.type}</span></div>`;
+    });
+    html+=`<div class="offer-card none-card" id="card-__none__" onclick="pickOffer('None','none')">
+      <div class="offer-school" style="color:var(--text2)">None</div>
+      <div class="offer-meta">Decline all offers</div>
+      <span class="offer-badge b-none">Decline</span></div>`;
+    html+='</div>';
+  } else {
+    html=`<p style="font-size:13px;color:var(--text3);padding:12px 0;">No offers this cycle — the market is tough. Try re-running.</p>`;
+  }
+  document.getElementById('offers-container').innerHTML=html;
+
+  document.getElementById('pre-run').style.display='none';
+  document.getElementById('results-section').style.display='block';
+}
+
+function pickOffer(name,type){
+  document.querySelectorAll('.offer-card').forEach(c=>c.classList.remove('sel'));
+  const key=name==='None'?'__none__':name.replace(/[^a-zA-Z0-9]/g,'_');
+  const card=document.getElementById('card-'+key);
+  if(card) card.classList.add('sel');
+  selectedOffer={name,type};
+  document.getElementById('btn-confirm').disabled=false;
+}
+
+function confirmChoice(){
+  if(!selectedOffer||!currentSim) return;
+  currentSim.choice=selectedOffer.name;
+  simHistory.push({...currentSim});
+  saveToStorage();                    // ← auto-save on every confirmed run
+
+  const isNone=selectedOffer.name==='None';
+  const banner=document.getElementById('decision-banner');
+  banner.className='decision-banner '+(isNone?'declined':'accepted');
+  banner.style.display='block';
+  document.getElementById('decision-title').textContent = isNone
+    ? `${possessive(userName)} decision: Decline all offers.`
+    : `${possessive(userName)} choice: ${selectedOffer.name}`;
+  document.getElementById('decision-sub').textContent = isNone
+    ? 'Recorded. On to the next cycle!'
+    : `Joining a ${selectedOffer.type==='R1'?'research university':selectedOffer.type==='LAC'?'liberal arts college':'teaching-focused institution'}. Best of luck!`;
+  document.getElementById('stat-choice').textContent=selectedOffer.name;
+  document.getElementById('btn-confirm').disabled=true;
+  renderHistory();
+}
+
+// ── History ──────────────────────────────────────────────────────────────────
+function renderHistory(){
+  const n=simHistory.length;
+  document.getElementById('history-count').textContent=n+' run'+(n===1?'':'s');
+  document.getElementById('btn-export').disabled=n===0;
+  const c=document.getElementById('history-container');
+  if(!n){ c.innerHTML='<p class="empty-note">No simulations yet.</p>'; return; }
+  let html=`<div class="history-scroll"><table>
+    <thead><tr>
+      <th>#</th><th>User</th><th>When</th><th>Scenario</th><th>Type</th>
+      <th>Apps</th><th>Onsite%</th><th>Sites</th><th>Offer%</th><th>Offers</th>
+      <th>Offer schools</th><th>Choice</th>
+    </tr></thead><tbody>`;
+  simHistory.slice().reverse().forEach(r=>{
+    html+=`<tr>
+      <td style="color:var(--text3);font-size:11px;">#${r.runNumber}</td>
+      <td>${r.user}</td>
+      <td style="white-space:nowrap;font-size:10px;">${r.timestamp}</td>
+      <td style="text-transform:capitalize;">${r.scenario}</td>
+      <td style="text-transform:uppercase;">${r.instMode}</td>
+      <td>${r.nApplied}</td>
+      <td>${r.onsiteRatePct}%</td>
+      <td>${r.nOnsites}</td>
+      <td>${r.offerRatePct}%</td>
+      <td>${r.nOffers}</td>
+      <td style="font-size:10px;color:var(--text2);max-width:160px;">${r.offerSchools.map(s=>s.name).join(', ')||'—'}</td>
+      <td style="font-weight:600;">${r.choice||'—'}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  c.innerHTML=html;
+}
+
+function clearHistory(){
+  if(!simHistory.length) return;
+  if(!confirm('Clear all simulation history?')) return;
+  simHistory=[];
+  saveToStorage();
+  renderHistory();
+}
+
+function exportXLSX(){
+  if(!simHistory.length) return;
+  const wb=XLSX.utils.book_new();
+
+  // Summary sheet
+  const summary=simHistory.map(r=>({
+    'Run #': r.runNumber, 'User': r.user, 'Timestamp': r.timestamp,
+    'Scenario': r.scenario, 'Institution type': r.instMode, 'Pool size': r.poolSize,
+    'Applications': r.nApplied, 'Onsite rate (%)': r.onsiteRatePct,
+    'Onsites': r.nOnsites, 'Offer rate (%)': r.offerRatePct, 'Offers': r.nOffers,
+    'Offer schools': r.offerSchools.map(s=>s.name).join('; ')||'—',
+    'Choice': r.choice||'—'
+  }));
+  const ws1=XLSX.utils.json_to_sheet(summary);
+  ws1['!cols']=[{wch:6},{wch:12},{wch:20},{wch:12},{wch:16},{wch:10},{wch:12},{wch:14},{wch:10},{wch:13},{wch:8},{wch:50},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Summary');
+
+  // Schools detail sheet
+  const detail=[];
+  simHistory.forEach(r=>{
+    r.applied.forEach(school=>{
+      detail.push({
+        'Run #': r.runNumber, 'User': r.user, 'School': school,
+        'Got onsite': r.onsites.includes(school)?'Yes':'No',
+        'Got offer': r.offerSchools.map(s=>s.name).includes(school)?'Yes':'No'
+      });
+    });
+  });
+  const ws2=XLSX.utils.json_to_sheet(detail);
+  ws2['!cols']=[{wch:6},{wch:12},{wch:40},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Schools detail');
+
+  XLSX.writeFile(wb,`${userName.replace(/\s+/g,'_')}_job_market_sims.xlsx`);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+updateUserUI();
+freshRandom();
+renderHistory();
+
+// ── Service worker (PWA offline support) ─────────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
