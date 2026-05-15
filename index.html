@@ -591,7 +591,8 @@ function confirmChoice(){
   if(!selectedOffer||!currentSim) return;
   currentSim.choice=selectedOffer.name;
   simHistory.push({...currentSim});
-  saveToStorage();                    // ← auto-save on every confirmed run
+  saveToStorage();
+  postToSheets({...currentSim});                    // ← auto-save on every confirmed run
 
   const isNone=selectedOffer.name==='None';
   const banner=document.getElementById('decision-banner');
@@ -641,6 +642,17 @@ function renderHistory(){
   c.innerHTML=html;
 }
 
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzY98vl52ZLOyrGh_UntZnIdbQBbLdDReyv6RF7qj3BsQdqfpF9mdans1CTpjUjkB8/exec'; // paste your URL here
+
+function postToSheets(simData) {
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(simData)
+  }).catch(() => {}); // silently fail if offline
+}
+  
 function clearHistory(){
   if(!simHistory.length) return;
   if(!confirm('Clear all simulation history?')) return;
